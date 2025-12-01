@@ -1,0 +1,6 @@
+@Kepler.Web_HostAddress = http://localhost:5105
+
+GET {{Kepler.Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
