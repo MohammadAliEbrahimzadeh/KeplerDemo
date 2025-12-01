@@ -7,6 +7,7 @@ public static class KeplerRegistry
     private static readonly Dictionary<string, Dictionary<string, List<string>>> _registeredExclusions = new();
     private static readonly Dictionary<string, Dictionary<string, Dictionary<string, NestedFieldPolicy>>> _registeredNestedPolicies = new();
     private static readonly Dictionary<string, Dictionary<string, Dictionary<string, FilterPolicy>>> _registeredFilters = new();
+    private static readonly Dictionary<string, Dictionary<string, List<string>>> _registeredOrderByFields = new();
     private static readonly HashSet<string> _allRegisteredPolicies = new();
 
     /// <summary>
@@ -17,7 +18,7 @@ public static class KeplerRegistry
         Dictionary<string, List<string>> policies,
         Dictionary<string, List<string>>? exclusions = null,
         Dictionary<string, Dictionary<string, NestedFieldPolicy>>? nestedPolicies = null,
-        Dictionary<string, Dictionary<string, FilterPolicy>>? filters = null)
+        Dictionary<string, Dictionary<string, FilterPolicy>>? filters = null, Dictionary<string, List<string>>? orderByFields = null)
         where T : class
     {
         var key = $"{typeof(T).Name}:{policyName}";
@@ -33,7 +34,20 @@ public static class KeplerRegistry
 
         if (filters != null && filters.Any())
             _registeredFilters[key] = filters;
+
+        if (orderByFields != null && orderByFields.Any())
+            _registeredOrderByFields[key] = orderByFields;
     }
+
+    public static Dictionary<string, List<string>> GetAllowedOrderByFields(string typeName, string policyName)
+    {
+        var key = $"{typeName}:{policyName}";
+        if (_registeredOrderByFields.TryGetValue(key, out var orderByFields))
+            return orderByFields;
+
+        return new Dictionary<string, List<string>>();
+    }
+
 
     /// <summary>
     /// Get policies for a specific type and policy name

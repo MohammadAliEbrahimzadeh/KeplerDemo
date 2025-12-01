@@ -26,6 +26,7 @@ public class ProductService : IProductService
     public async Task<CustomResponse> GetProductsAsync(CancellationToken cancellationToken)
     {
         var product = _unitOfWork.GetAsQueryable<Product>()
+            .order
             .ApplyKeplerPolicy("Filter", new { MakeFlag = true });
 
         var count = await product.CountAsync();

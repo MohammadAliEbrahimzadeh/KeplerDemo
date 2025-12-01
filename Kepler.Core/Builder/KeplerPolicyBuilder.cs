@@ -21,6 +21,9 @@ public interface IKeplerPolicyBuilder<T> where T : class
         where TNested : class;
     IKeplerPolicyBuilder<T> MaxDepth(int depth);
     IKeplerPolicyBuilder<T> For(string role);
+
+    IKeplerPolicyBuilder<T> AllowOrderBy(params Expression<Func<T, object>>[] fields);
+
     Dictionary<string, List<string>> Build();
     Dictionary<string, List<string>> GetExclusions();
     Dictionary<string, int> GetMaxDepths();
@@ -56,7 +59,7 @@ public class KeplerPolicyBuilder<T> : IKeplerPolicyBuilder<T> where T : class
 
     private class BuilderState
     {
-
+        public List<string> AllowedOrderByFields { get; set; } = new();
         public Dictionary<string, FilterPolicy> AllowedFilters { get; set; } = new();
 
         public List<string> AllowedFields { get; set; } = new();
@@ -69,6 +72,39 @@ public class KeplerPolicyBuilder<T> : IKeplerPolicyBuilder<T> where T : class
     }
 
     private readonly Dictionary<string, FilterPolicy> _allowedFilters = new();
+
+
+    public IKeplerPolicyBuilder<T> AllowOrderBy(params Expression<Func<T, object>>[] fields)
+    {
+        var fieldNames = ExtractPropertyNames(fields);
+        var state = GetState();
+
+        // ✅ VALIDATE: Fields must be allowed first
+        var notAllowed = fieldNames
+            .Where(f => !state.UseAllFields && !state.AllowedFields.Contains(f, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+
+        if (notAllowed.Any())
+        {
+            throw new InvalidOperationException(
+                $"❌ SECURITY ERROR: Cannot allow ordering on fields: {string.Join(", ", notAllowed)}\n\n" +
+                $"These fields must be in AllowFields() first.\n" +
+                $"Fix: Add to policy:\n" +
+                $"    .AllowFields(x => x.{notAllowed[0]}, ...)\n" +
+                $"    .AllowOrderBy(x => x.{notAllowed[0]}, ...)");
+        }
+
+        // ✅ Add to allowed order by fields
+        state.AllowedOrderByFields.AddRange(fieldNames);
+        return this;
+    }
+
+    public Dictionary<string, List<string>> GetAllowedOrderByFields()
+    {
+        return _states
+            .Where(kvp => kvp.Value.AllowedOrderByFields.Any())
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.AllowedOrderByFields);
+    }
 
 
     public IKeplerPolicyBuilder<T> AllowFilter<TProp>(Expression<Func<T, TProp>> property, FilterOperationEnum allowedOperations = FilterOperationEnum.All)

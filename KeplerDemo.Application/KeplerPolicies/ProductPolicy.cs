@@ -11,8 +11,13 @@ public class ProductPolicy : IKeplerPolicy<Product>
     public void Configure(IKeplerPolicyBuilder<Product> builder)
     {
         builder
-            .AllowFields(x => x.Color!, x => x.Name!, x => x.MakeFlag)
-            .AllowNestedFields(x => x.ProductCostHistories, nested => nested.SelectAllExcept(x => x.StandardCost))
+            .AllowFields(x => x.Color!, x => x.Name!, x => x.MakeFlag, x => x.SellStartDate)
+
+            .AllowOrderBy(x => x.SellStartDate!)
+
+            .AllowNestedFields(x => x.ProductCostHistories,
+                nested => nested.SelectAllExcept(x => x.StandardCost))
+
             .AllowFilter(x => x.MakeFlag, FilterOperationEnum.Equals)
             .AllowFilter(x => x.Name, FilterOperationEnum.StartsWith);
     }

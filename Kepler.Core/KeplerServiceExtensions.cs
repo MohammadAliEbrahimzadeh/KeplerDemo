@@ -27,13 +27,15 @@ public static class KeplerServiceExtensions
         var exclusions = builder.GetExclusions();
         var nestedPolicies = builder.GetNestedPolicies();
         var filters = builder.GetAllowedFilters();  // Get filters from builder
+        var orderByFields = builder.GetAllowedOrderByFields();
 
         KeplerRegistry.RegisterPolicy<T>(
             policyName,
             builtPolicies,
             exclusions,
             nestedPolicies,
-            filters);  // Pass filters!
+            filters,
+            orderByFields); 
 
         return services;
     }
