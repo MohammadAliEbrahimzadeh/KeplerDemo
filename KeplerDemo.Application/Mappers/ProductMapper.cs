@@ -12,5 +12,13 @@ public static class ProductMapper
             .Map(dest => dest.MakeFlag, src => src.ProductID)
             .Map(dest => dest.Name, src => src.Name)
             .Map(dest => dest.Color, src => src.Color);
+
+
+        TypeAdapterConfig<Product, ProductTestDto>.NewConfig()
+           .Map(dest => dest.ProductID, src => src.ProductID)
+           .Map(dest => dest.Name, src => src.Name)
+           .Map(dest => dest.Color, src => src.Color)
+           .Map(dest => dest.MakeFlag, src => src.MakeFlag)
+           .Map(dest => dest.SellStartDate, src => src.SellStartDate);
     }
 }

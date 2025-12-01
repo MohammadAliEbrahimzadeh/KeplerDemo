@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Kepler.Core;
+using Kepler.Core.Enums;
 using Kepler.Core.Pagination;
 using KeplerDemo.Application.Contracts;
 using KeplerDemo.Application.DTOs;
@@ -26,13 +27,14 @@ public class ProductService : IProductService
     public async Task<CustomResponse> GetProductsAsync(CancellationToken cancellationToken)
     {
         var product = _unitOfWork.GetAsQueryable<Product>()
-            .order
+            .ApplyKeplerOrdering("Filter", x => x.SellStartDate, OrderOperationEnum.Descending)
+            .ThenApplyKeplerOrdering("Filter", x => x.ProductID, OrderOperationEnum.Ascending)
             .ApplyKeplerPolicy("Filter", new { MakeFlag = true });
 
         var count = await product.CountAsync();
 
         var products = await product.ApplyKeplerPagination()
-            .ProjectToType<ProductDto>().ToListAsync(cancellationToken);
+            .ProjectToType<ProductTestDto>().ToListAsync(cancellationToken);
 
         return new CustomResponse()
         {
