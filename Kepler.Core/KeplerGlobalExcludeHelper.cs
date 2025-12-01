@@ -10,9 +10,7 @@ namespace Kepler.Core;
 /// </summary>
 public static class KeplerGlobalExcludeHelper
 {
-    // Cache: Type → HashSet of excluded prop names
     private static readonly Dictionary<Type, HashSet<string>> _globalExclusionCache = new();
-    // Visited set for cycle detection during recursion
     private static readonly HashSet<Type> _visitedDuringScan = new();
 
     /// <summary>
@@ -225,11 +223,9 @@ public static class KeplerGlobalExcludeHelper
         }
     }
 
-    // FIXED: Use string-split detection for consistency
     private static void ScanTypePropertiesForReasons(Type type, Dictionary<string, string> result)
     {
         var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-        // Type-level check first
         var typeAttrs = type.GetCustomAttributes();
         bool typeLevelExclude = false;
         string? typeReason = null;
@@ -246,7 +242,6 @@ public static class KeplerGlobalExcludeHelper
         }
         if (typeLevelExclude)
         {
-            // Exclude ALL properties
             foreach (var property in properties)
             {
                 if (!result.ContainsKey(property.Name))
@@ -256,7 +251,6 @@ public static class KeplerGlobalExcludeHelper
             }
             return;
         }
-        // Prop-level checks
         foreach (var property in properties)
         {
             var attrs = property.GetCustomAttributes();
@@ -271,54 +265,6 @@ public static class KeplerGlobalExcludeHelper
                 }
             }
         }
-    }
-
-    /// <summary>
-    /// Clear the cache (useful for testing)
-    /// </summary>
-    public static void ClearCache()
-    {
-        _globalExclusionCache.Clear();
-        _visitedDuringScan.Clear();
-        Console.WriteLine("[Kepler] 🗑️ Global exclusion cache cleared");
-    }
-
-    /// <summary>
-    /// Test if a property is excluded (with graph scan)
-    /// </summary>
-    public static bool IsPropertyExcluded<T>(string propertyName) where T : class
-    {
-        var excluded = GetGloballyExcludedProperties<T>();
-        var isExcluded = excluded.Contains(propertyName, StringComparer.OrdinalIgnoreCase);
-        Console.WriteLine($"[Kepler] Property {typeof(T).Name}.{propertyName} excluded: {isExcluded}");
-        return isExcluded;
-    }
-
-    /// <summary>
-    /// Debug: Show all custom attributes on a property
-    /// </summary>
-    public static void DebugPropertyAttributes(Type entityType, string propertyName)
-    {
-        var property = entityType.GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-        if (property == null)
-        {
-            Console.WriteLine($"❌ Property {propertyName} not found on {entityType.Name}");
-            return;
-        }
-        var attrs = property.GetCustomAttributes();
-        Console.WriteLine($"\n[Debug] Attributes on {entityType.Name}.{propertyName}:");
-        if (attrs.Count() == 0)
-        {
-            Console.WriteLine(" (No attributes)");
-        }
-        else
-        {
-            foreach (var attr in attrs)
-            {
-                Console.WriteLine($" • {attr.GetType().FullName}");
-            }
-        }
-        Console.WriteLine();
     }
 
     private static bool IsNavigationProperty(PropertyInfo prop)

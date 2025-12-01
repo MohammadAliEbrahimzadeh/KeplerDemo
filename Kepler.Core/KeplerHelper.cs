@@ -27,7 +27,6 @@ public static class KeplerExtensions
     {
         var allowedFiltersDict = KeplerRegistry.GetAllowedFilters(typeName, policyName);
 
-        // FIXED: Use TryGetValue instead of GetValueOrDefault
         if (!allowedFiltersDict.TryGetValue(role, out var allowedFilters))
         {
             allowedFilters = new Dictionary<string, FilterPolicy>();
@@ -178,7 +177,7 @@ public static class KeplerExtensions
             if (!policies.TryGetValue(role, out var fields))
                 throw new InvalidOperationException($"Role '{role}' not found in policy '{policyName}'");
 
-            // 🔥 Either get global excludes OR empty set (ignore)
+
             var globallyExcluded = ignoreGlobalExceptions
                 ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 : KeplerGlobalExcludeHelper.GetGloballyExcludedProperties<T>();
@@ -196,12 +195,12 @@ public static class KeplerExtensions
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
-            // Role exclusions
+
             var excludedFields = exclusions.TryGetValue(role, out var excluded)
                 ? excluded
                 : Enumerable.Empty<string>();
 
-            // 🔥 Merge exclusions ONLY if ignoreGlobalExceptions == false
+
             var allExcludedFields = ignoreGlobalExceptions
                 ? excludedFields.ToList()
                 : excludedFields.Union(globallyExcluded, StringComparer.OrdinalIgnoreCase).ToList();
@@ -266,11 +265,11 @@ public static class KeplerExtensions
 
         var allBindings = new List<MemberBinding>();
 
-        // 1. Add allowed scalars
+
         allBindings.AddRange(selectedProperties
             .Select(prop => Expression.Bind(prop, Expression.Property(parameter, prop))));
 
-        // 2. Add excluded scalars as default values
+
         foreach (var excludeName in allExcludedFields)
         {
             var propInfo = properties.FirstOrDefault(p =>
@@ -282,7 +281,7 @@ public static class KeplerExtensions
             allBindings.Add(Expression.Bind(propInfo, Expression.Constant(defaultValue, propInfo.PropertyType)));
         }
 
-        // 3. Navigation props (with nested policies)
+
         foreach (var navProp in navigationProps)
         {
             var navProperty = properties.FirstOrDefault(p =>
@@ -290,7 +289,7 @@ public static class KeplerExtensions
 
             if (navProperty == null) continue;
 
-            // ✅ ALWAYS create proper nested projection
+
             MemberBinding? nestedBinding = null;
 
             if (nestedPolicies.TryGetValue(navProp, out var nestedPolicy))
@@ -316,7 +315,7 @@ public static class KeplerExtensions
             }
         }
 
-        // 4. Navigation props not included → set to defaults (null or empty collections)
+
         var allNavProps = GetAllNavigationProperties<T>();
         foreach (var notIncluded in allNavProps
             .Where(np => !navigationProps.Contains(np, StringComparer.OrdinalIgnoreCase)
@@ -346,7 +345,7 @@ public static class KeplerExtensions
         ParameterExpression parameter,
         PropertyInfo navProperty,
         NestedFieldPolicy nestedPolicy,
-        bool ignoreGlobalExceptions)    // ⬅ ADDED
+        bool ignoreGlobalExceptions)  
     {
         var navPropertyType = navProperty.PropertyType;
         var propertyAccess = Expression.Property(parameter, navProperty);
@@ -373,14 +372,14 @@ public static class KeplerExtensions
         Type elementType,
         Expression collectionAccess,
         NestedFieldPolicy nestedPolicy,
-        bool ignoreGlobalExceptions)    // ⬅ ADDED
+        bool ignoreGlobalExceptions)   
     {
         var elementParameter = Expression.Parameter(elementType, "item");
         var projectionLambda = CreateNestedElementProjection(
             elementType,
             elementParameter,
             nestedPolicy,
-            ignoreGlobalExceptions);    // ⬅ PASS IT
+            ignoreGlobalExceptions);   
 
         var selectMethod = typeof(Enumerable)
             .GetMethods()
@@ -421,12 +420,12 @@ public static class KeplerExtensions
         Type elementType,
         ParameterExpression elementParameter,
         NestedFieldPolicy nestedPolicy,
-        bool ignoreGlobalExceptions)    // ⬅ ADDED
+        bool ignoreGlobalExceptions)   
     {
         var properties = elementType.GetProperties();
         var allBindings = new List<MemberBinding>();
 
-        // ✅ GET GLOBALLY EXCLUDED FOR NESTED TYPE - RESPECTS ignoreGlobalExceptions
+
         var globallyExcluded = ignoreGlobalExceptions
             ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             : KeplerGlobalExcludeHelper.GetGloballyExcludedProperties(elementType);
@@ -435,12 +434,12 @@ public static class KeplerExtensions
 
         if (nestedPolicy.SelectAll)
         {
-            // Include all scalar properties except excluded (both policy and global)
+
             fieldsToInclude = properties
                 .Where(p => !IsNavigationProperty(p))
                 .Select(p => p.Name)
                 .Where(f => !nestedPolicy.ExcludedFields.Contains(f, StringComparer.OrdinalIgnoreCase))
-                .Where(f => !globallyExcluded.Contains(f)) // ← Exclude globally excluded (if not ignoring)
+                .Where(f => !globallyExcluded.Contains(f)) 
                 .ToList();
         }
         else if (nestedPolicy.AllowedFields.Any())
@@ -448,7 +447,7 @@ public static class KeplerExtensions
             // Include only allowed fields, but respect exclusions
             fieldsToInclude = nestedPolicy.AllowedFields
                 .Where(f => !nestedPolicy.ExcludedFields.Contains(f, StringComparer.OrdinalIgnoreCase))
-                .Where(f => !globallyExcluded.Contains(f)) // ← Exclude globally excluded (if not ignoring)
+                .Where(f => !globallyExcluded.Contains(f)) 
                 .ToList();
         }
         else if (nestedPolicy.ExcludedFields.Any())
@@ -496,7 +495,7 @@ public static class KeplerExtensions
             }
         }
 
-        // ✅ Bind globally excluded properties to default (ONLY if not ignoring)
+
         if (!ignoreGlobalExceptions)
         {
             foreach (var globalExcluded in globallyExcluded)
