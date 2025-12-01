@@ -18,12 +18,17 @@ namespace Kepler.Web.Controllers
 
         [HttpGet]
         [Route("getProducts")]
-        public async Task<CustomResponse> GetProducts(CancellationToken cancellationToken)
-            => await _productService.GetProductsAsync(cancellationToken);
+        public async Task<CustomResponse> GetProducts([FromQuery] ProductFilterDto dto, CancellationToken cancellationToken)
+            => await _productService.GetProductsAsync(dto, cancellationToken);
 
         [HttpGet]
         [Route("getProductsBecnhmark")]
         public async Task<CustomResponse> GetProductsBecnhmark(CancellationToken cancellationToken)
             => await _productService.GetProductsBenchMarkAsync(cancellationToken);
+
+        [HttpGet]
+        [Route("getProductsBecnhmarkV2")]
+        public async Task<CustomResponse> GetProductsBecnhmarkV2(CancellationToken cancellationToken)
+            => await _productService.GetProductsBenchmarkV2Async(cancellationToken);
     }
 }

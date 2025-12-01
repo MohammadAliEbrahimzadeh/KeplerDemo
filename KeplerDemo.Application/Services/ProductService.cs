@@ -23,13 +23,169 @@ public class ProductService : IProductService
         _unitOfWork = unitOfWork;
     }
 
+    public async Task<CustomResponse> GetProductsBenchmarkV2Async(CancellationToken cancellationToken)
+    {
+        const int iterations = 1000;
+        long keplerCountTotal = 0;
+        long keplerPagingTotal = 0;
+        long efCountTotal = 0;
+        long efPagingTotal = 0;
+        long dapperCountTotal = 0;
+        long dapperPagingTotal = 0;
+        var sw = new Stopwatch();
+        var connectionString = "Server=localhost;Database=AdventureWorks2022;Trusted_Connection=True;TrustServerCertificate=True;"; // Your DB
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("========== WARMING UP DATABASE ==========");
+        Console.ResetColor();
+        // Warm-up (not measured)
+        _ = await _unitOfWork.GetAsQueryable<Product>().CountAsync(cancellationToken);
+        _ = await _unitOfWork.GetAsQueryable<Product>()
+            .Where(p => p.Name.StartsWith("Decal") && p.MakeFlag == true)
+            .OrderBy(p => p.SellStartDate)
+            .Skip(0).Take(10)
+            .Select(p => new { p.Name, p.Color, p.MakeFlag })
+            .ToListAsync(cancellationToken);
+        var warmupDto = new ProductFilterDto { Name = "Decal", MakeFlag = true, PageNo = 1, SizeNo = 10 };
+        _ = await _unitOfWork.GetAsQueryable<Product>()
+            .ApplyKeplerOrdering("Filter", p => p.SellStartDate, OrderOperationEnum.Ascending)
+            .ApplyKeplerPolicy("Filter", warmupDto)
+            .CountAsync(cancellationToken);
+        _ = await _unitOfWork.GetAsQueryable<Product>()
+            .ApplyKeplerOrdering("Filter", p => p.SellStartDate, OrderOperationEnum.Ascending)
+            .ApplyKeplerPolicy("Filter", warmupDto)
+            .ApplyKeplerPagination()
+            .ProjectToType<ProductTestDto>()
+            .ToListAsync(cancellationToken);
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("Warmup completed.");
+        Console.ResetColor();
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("========== BENCHMARK START ==========");
+        Console.ResetColor();
+        using var conn = new SqlConnection(connectionString);
+        await conn.OpenAsync(cancellationToken);
+        var benchmarkDto = new ProductFilterDto { Name = "Decal", MakeFlag = true, PageNo = 1, SizeNo = 10 };  // Fixed filter
+        for (int i = 0; i < iterations; i++)
+        {
+            // ------------------- KEPLER COUNT -------------------
+            sw.Restart();
+            var keplerQuery = _unitOfWork.GetAsQueryable<Product>()
+                .ApplyKeplerOrdering("Filter", p => p.SellStartDate, OrderOperationEnum.Ascending)
+                .ApplyKeplerPolicy("Filter", benchmarkDto);
+            await keplerQuery.CountAsync(cancellationToken);
+            sw.Stop();
+            keplerCountTotal += sw.ElapsedMilliseconds;
+            // ------------------- KEPLER PAGING + PROJECT -------------------
+            sw.Restart();
+            await keplerQuery
+                .ApplyKeplerPagination()
+                .ProjectToType<ProductTestDto>()
+                .ToListAsync(cancellationToken);
+            sw.Stop();
+            keplerPagingTotal += sw.ElapsedMilliseconds;
+            // ------------------- EF CORE COUNT -------------------
+            sw.Restart();
+            var efQuery = _unitOfWork.GetAsQueryable<Product>()
+                .Where(p => p.Name.StartsWith(benchmarkDto.Name) && p.MakeFlag == benchmarkDto.MakeFlag)
+                .OrderBy(p => p.SellStartDate);
+            await efQuery.CountAsync(cancellationToken);
+            sw.Stop();
+            efCountTotal += sw.ElapsedMilliseconds;
+            // ------------------- EF CORE PAGING + PROJECT -------------------
+            sw.Restart();
+            await efQuery
+                .Skip((benchmarkDto.PageNo - 1) * benchmarkDto.SizeNo)
+                .Take(benchmarkDto.SizeNo)
+                .Select(p => new ProductTestDto { Name = p.Name, Color = p.Color, MakeFlag = p.MakeFlag, SellStartDate = p.SellStartDate, ProductID = p.ProductID })
+                .ToListAsync(cancellationToken);
+            sw.Stop();
+            efPagingTotal += sw.ElapsedMilliseconds;
+            // ------------------- DAPPER COUNT -------------------
+            sw.Restart();
+            var dapperCount = await conn.ExecuteScalarAsync<int>(
+                @"SELECT COUNT(*) FROM [Production].[Product] 
+              WHERE [Name] LIKE @Name AND [MakeFlag] = @MakeFlag",
+                new { Name = benchmarkDto.Name + "%", MakeFlag = benchmarkDto.MakeFlag });
+            sw.Stop();
+            dapperCountTotal += sw.ElapsedMilliseconds;
+            // ------------------- DAPPER PAGING + PROJECT -------------------
+            sw.Restart();
+            var dapperPaging = (await conn.QueryAsync<ProductTestDto>(
+                @"SELECT [Name], [Color], [MakeFlag], [SellStartDate], [ProductID]
+              FROM [Production].[Product] 
+              WHERE [Name] LIKE @Name AND [MakeFlag] = @MakeFlag
+              ORDER BY [SellStartDate]
+              OFFSET @Offset ROWS FETCH NEXT @Size ROWS ONLY",
+                new { Name = benchmarkDto.Name + "%", MakeFlag = benchmarkDto.MakeFlag, Offset = (benchmarkDto.PageNo - 1) * benchmarkDto.SizeNo, Size = benchmarkDto.SizeNo })).ToList();
+            sw.Stop();
+            dapperPagingTotal += sw.ElapsedMilliseconds;
+        }
+        // Calculate averages
+        double avgKeplerCount = keplerCountTotal / (double)iterations;
+        double avgKeplerPaging = keplerPagingTotal / (double)iterations;
+        double avgEfCount = efCountTotal / (double)iterations;
+        double avgEfPaging = efPagingTotal / (double)iterations;
+        double avgDapperCount = dapperCountTotal / (double)iterations;
+        double avgDapperPaging = dapperPagingTotal / (double)iterations;
+        // ========================= TABLE OUTPUT =========================
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine(" AVERAGE EXECUTION TIMES (ms)");
+        Console.ResetColor();
+        Console.WriteLine("-----------------------------------------------------------------------");
+        Console.WriteLine("| Component | Kepler | EF Core | Dapper |");
+        Console.WriteLine("-----------------------------------------------------------------------");
+        PrintRow("Count()", avgKeplerCount, avgEfCount, avgDapperCount);
+        PrintRow("Paging + Projection", avgKeplerPaging, avgEfPaging, avgDapperPaging);
+        Console.WriteLine("-----------------------------------------------------------------------");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("Benchmark completed successfully.");
+        Console.ResetColor();
+        // Return actual Kepler result
+        var finalProducts = await _unitOfWork.GetAsQueryable<Product>()
+            .ApplyKeplerOrdering("Filter", p => p.SellStartDate, OrderOperationEnum.Ascending)
+            .ApplyKeplerPolicy("Filter", benchmarkDto)
+            .ApplyKeplerPagination()
+            .ProjectToType<ProductTestDto>()
+            .ToListAsync(cancellationToken);
+        return new CustomResponse
+        {
+            Data = finalProducts,
+            IsSuccess = true,
+            Message = "Benchmark completed",
+            StatusCode = HttpStatusCode.OK,
+            TotalCount = finalProducts.Count
+        };
 
-    public async Task<CustomResponse> GetProductsAsync(CancellationToken cancellationToken)
+        void PrintRow(string label, double kepler, double ef, double dapper)
+        {
+            Console.Write("| ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write($"{label.PadRight(24)}");
+            Console.ResetColor();
+            Console.Write(" | ");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write($"{kepler.ToString("0.00").PadLeft(10)}");
+            Console.ResetColor();
+            Console.Write(" | ");
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.Write($"{ef.ToString("0.00").PadLeft(12)}");
+            Console.ResetColor();
+            Console.Write(" | ");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write($"{dapper.ToString("0.00").PadLeft(10)}");
+            Console.ResetColor();
+            Console.WriteLine(" |");
+        }
+    }
+
+
+
+    public async Task<CustomResponse> GetProductsAsync(ProductFilterDto dto, CancellationToken cancellationToken)
     {
         var product = _unitOfWork.GetAsQueryable<Product>()
-            .ApplyKeplerOrdering("Filter", x => x.SellStartDate, OrderOperationEnum.Descending)
-            .ThenApplyKeplerOrdering("Filter", x => x.ProductID, OrderOperationEnum.Ascending)
-            .ApplyKeplerPolicy("Filter", new { MakeFlag = true });
+            .ApplyKeplerOrdering("Filter", x => x.SellStartDate, OrderOperationEnum.Ascending)
+            .ApplyKeplerPolicy("Filter", dto);
 
         var count = await product.CountAsync();
 

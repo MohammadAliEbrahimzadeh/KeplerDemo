@@ -14,6 +14,7 @@ public class ProductPolicy : IKeplerPolicy<Product>
             .AllowFields(x => x.Color!, x => x.Name!, x => x.MakeFlag, x => x.SellStartDate, x => x.ProductID)
             .AllowOrderBy(x => x.SellStartDate!, x => x.ProductID)
             .AllowFilter(x => x.MakeFlag, FilterOperationEnum.Equals)
+            .AllowFilter(x => x.ProductID, FilterOperationEnum.Equals)
             .AllowFilter(x => x.Name, FilterOperationEnum.StartsWith);
     }
 }
