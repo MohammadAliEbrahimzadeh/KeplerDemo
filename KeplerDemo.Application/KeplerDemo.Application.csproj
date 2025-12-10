@@ -12,12 +12,12 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.66" />
-    <PackageReference Include="Kepler.Core" Version="1.0.9-beta" />
     <PackageReference Include="Mapster" Version="7.4.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.6" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Kepler.Core1\Kepler.Core.csproj" />
     <ProjectReference Include="..\KeplerDemo.Infrastructure\KeplerDemo.Infrastructure.csproj" />
   </ItemGroup>
 

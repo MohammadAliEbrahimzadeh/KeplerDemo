@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeplerDemo.Domain", "Kepler
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeplerDemo.Infrastructure", "KeplerDemo.Infrastructure\KeplerDemo.Infrastructure.csproj", "{3D489C35-10C1-4D1A-BD60-AC238F1B082C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kepler.Core", "..\Kepler.Core1\Kepler.Core.csproj", "{40D006B0-0E27-F86D-B9A1-907775BA50C0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{3D489C35-10C1-4D1A-BD60-AC238F1B082C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D489C35-10C1-4D1A-BD60-AC238F1B082C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D489C35-10C1-4D1A-BD60-AC238F1B082C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40D006B0-0E27-F86D-B9A1-907775BA50C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40D006B0-0E27-F86D-B9A1-907775BA50C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40D006B0-0E27-F86D-B9A1-907775BA50C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40D006B0-0E27-F86D-B9A1-907775BA50C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +59,7 @@ Global
 		{12EAF70C-ED5C-48E4-A10D-B5C66F26FBA0} = {443CD026-B0F2-4340-844A-AE0AF0719816}
 		{0FDDBB96-D79E-46E9-A17A-7EE2BC6CFF87} = {443CD026-B0F2-4340-844A-AE0AF0719816}
 		{3D489C35-10C1-4D1A-BD60-AC238F1B082C} = {443CD026-B0F2-4340-844A-AE0AF0719816}
+		{40D006B0-0E27-F86D-B9A1-907775BA50C0} = {443CD026-B0F2-4340-844A-AE0AF0719816}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1F85A1E5-1D8A-4A51-B5A0-63AEFE5CC640}

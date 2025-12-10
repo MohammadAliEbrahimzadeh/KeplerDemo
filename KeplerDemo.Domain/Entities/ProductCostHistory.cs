@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Kepler.Core.Attributes;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -13,6 +14,8 @@ public class ProductCostHistory
     public int ProductID { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
+
+    [KeplerGlobalExclude(reason: "test")]
     public decimal StandardCost { get; set; }
     public DateTime ModifiedDate { get; set; }
 

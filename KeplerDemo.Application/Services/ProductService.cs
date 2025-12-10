@@ -186,31 +186,16 @@ public class ProductService : IProductService
 
     public async Task<CustomResponse> GetProductsAsync(ProductFilterDto dto, CancellationToken cancellationToken)
     {
-        //var result = await _unitOfWork.GetAsQueryable<Product>()
-        //        .ApplyKeplerOrdering(KeplerOrderingConfig.CreateWithSql("Filter", "SellStartDate", OrderOperationEnum.Descending), out string? sql1)
-        //        .ThenApplyKeplerOrdering(KeplerOrderingConfig.CreateWithSql("Filter", "Name", OrderOperationEnum.Ascending), out string? sql3)
-        //        .ApplyKeplerPagination()
-        //        .ToListAsync();
+        var productSql1 = await _unitOfWork.GetAsQueryable<Product>()
+               .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("Nav", dto, ignoreGlobalExceptions: true), out KeplerDebugInfo? de1)
+               .ApplyKeplerOrdering(KeplerOrderingConfig.CreateWithSql("Nav", "Name", OrderOperationEnum.Descending), out string? sql1)
+               .ApplyKeplerPagination().ToListAsync(cancellationToken);
 
-        //var productNormal = await _unitOfWork.GetAsQueryable<Product>()
-        //  .ApplyKeplerPolicy(KeplerPolicyConfig.Create("Filter", "Default", dto)).ToListAsync(cancellationToken);
-
-        //var productLambda = await _unitOfWork.GetAsQueryable<Product>()
-        //       .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithLambda("Filter", "Default", dto), out Expression? debugLambda).ToListAsync(cancellationToken);
-
-        //var productDebug = await _unitOfWork.GetAsQueryable<Product>()
-        //       .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("Filter", "Default", dto),
-        //           out KeplerDebugInfo? info).ToListAsync();
 
         var productSql = await _unitOfWork.GetAsQueryable<Product>()
                .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("Filter", dto), out KeplerDebugInfo? de)
                .ApplyKeplerOrdering(KeplerOrderingConfig.CreateWithSql("Filter", "SellStartDate", OrderOperationEnum.Descending), out string? sql)
                .ApplyKeplerPagination().ToListAsync(cancellationToken);
-
-        //var count = await productLambda.CountAsync();
-
-        //var products = await productLambda.ApplyKeplerPagination()
-        //    .ProjectToType<ProductTestDto>().ToListAsync(cancellationToken);
 
         return new CustomResponse()
         {
