@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Kepler.Core" Version="1.0.9-beta" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Kepler.Core\Kepler.Core.csproj" />
   </ItemGroup>
 

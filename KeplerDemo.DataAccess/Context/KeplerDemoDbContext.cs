@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using KeplerDemo.Domain.Entities;
+﻿using KeplerDemo.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace KeplerDemo.DataAccess.Context
 {
@@ -94,6 +95,9 @@ namespace KeplerDemo.DataAccess.Context
                 .HasOne(pi => pi.Product)
                 .WithMany(p => p.ProductInventories)
                 .HasForeignKey(pi => pi.ProductID);
+
+
+            //modelBuilder.ApplyConfigurationsFromAssembly(typeof(KeplerConfiguration).Assembly);
         }
     }
 }

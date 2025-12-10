@@ -1,5 +1,5 @@
-﻿using Kepler.Core.Attributes;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
 
 namespace KeplerDemo.Domain.Entities;
 
@@ -24,7 +24,7 @@ public class Product
     public DateTime? SellEndDate { get; set; }
     public DateTime? DiscontinuedDate { get; set; }
 
-    [KeplerGlobalExclude(reason: "Test")]
+    //[kepler(reason: "Test")]
     public Guid rowguid { get; set; }
     public DateTime ModifiedDate { get; set; }
 
