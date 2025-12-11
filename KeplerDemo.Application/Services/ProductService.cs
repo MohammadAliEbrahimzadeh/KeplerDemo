@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Net;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace KeplerDemo.Application.Services;
 
@@ -198,18 +199,20 @@ public class ProductService : IProductService
         //    .Where(x => x.ProductID == dto.ProductID).FirstOrDefaultAsync(cancellationToken);
 
         var productSql1 = await _unitOfWork.GetAsQueryable<Product>()
-               .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("Nav", dto, ignoreGlobalExceptions: true), out KeplerDebugInfo? de1)
-               .ApplyKeplerOrdering(KeplerOrderingConfig.CreateWithSql("Nav", "Name", OrderOperationEnum.Descending), out string? sql1).ToListAsync(cancellationToken);
+               .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("Nav", dto, ignoreGlobalExceptions: true, role: "Test1"), out KeplerDebugInfo? de1)
+               .ApplyKeplerOrdering(KeplerOrderingConfig.CreateWithSql("Nav", "Name", OrderOperationEnum.Descending, "Test1"), out string? sql1)
+               .ApplyKeplerPagination()
+               .ToListAsync(cancellationToken);
 
 
         var productSql = await _unitOfWork.GetAsQueryable<Product>()
-               .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("Filter", dto), out KeplerDebugInfo? de)
-               .ApplyKeplerOrdering(KeplerOrderingConfig.CreateWithSql("Filter", "SellStartDate", OrderOperationEnum.Descending), out string? sql)
+               .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("Nav", dto, false, "Test"), out KeplerDebugInfo? de)
+               .ApplyKeplerOrdering(KeplerOrderingConfig.CreateWithSql("Nav", "SellStartDate", OrderOperationEnum.Descending, "Test"), out string? sql)
                .ApplyKeplerPagination().ToListAsync(cancellationToken);
 
         return new CustomResponse()
         {
-            Data = productSql,
+            Data = productSql1,
             IsSuccess = true,
             Message = "Returned",
             StatusCode = HttpStatusCode.OK,
