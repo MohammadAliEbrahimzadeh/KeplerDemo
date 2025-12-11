@@ -186,10 +186,20 @@ public class ProductService : IProductService
 
     public async Task<CustomResponse> GetProductsAsync(ProductFilterDto dto, CancellationToken cancellationToken)
     {
+
+        //var productSql12 = await _unitOfWork.GetAsQueryable<Product>().Include(x => x.ProductReviews)
+        //    .Where(x => x.ProductID == dto.ProductID).FirstOrDefaultAsync(cancellationToken);
+
+
+        //var productSql123 = await _unitOfWork.GetAsQueryable<Product>().Include(x => x.ProductListPriceHistories)
+        //    .Where(x => x.ProductID == dto.ProductID).FirstOrDefaultAsync(cancellationToken);
+
+        //var productSql1233 = await _unitOfWork.GetAsQueryable<Product>().Include(x => x.ProductInventories)
+        //    .Where(x => x.ProductID == dto.ProductID).FirstOrDefaultAsync(cancellationToken);
+
         var productSql1 = await _unitOfWork.GetAsQueryable<Product>()
                .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("Nav", dto, ignoreGlobalExceptions: true), out KeplerDebugInfo? de1)
-               .ApplyKeplerOrdering(KeplerOrderingConfig.CreateWithSql("Nav", "Name", OrderOperationEnum.Descending), out string? sql1)
-               .ApplyKeplerPagination().ToListAsync(cancellationToken);
+               .ApplyKeplerOrdering(KeplerOrderingConfig.CreateWithSql("Nav", "Name", OrderOperationEnum.Descending), out string? sql1).ToListAsync(cancellationToken);
 
 
         var productSql = await _unitOfWork.GetAsQueryable<Product>()

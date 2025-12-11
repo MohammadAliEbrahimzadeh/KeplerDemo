@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Kepler.Core.Attributes;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KeplerDemo.Domain.Entities;
@@ -11,6 +12,8 @@ public class ProductModel
     public string Name { get; set; } = null!;
     public string? CatalogDescription { get; set; }
     public string? Instructions { get; set; }
+
+    [KeplerGlobalExclude("test")]
     public Guid rowguid { get; set; }
     public DateTime ModifiedDate { get; set; }
 

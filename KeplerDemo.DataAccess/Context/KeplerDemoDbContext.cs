@@ -96,6 +96,8 @@ namespace KeplerDemo.DataAccess.Context
                 .WithMany(p => p.ProductInventories)
                 .HasForeignKey(pi => pi.ProductID);
 
+            modelBuilder.Entity<ProductInventory>()
+                .HasKey(pi => new { pi.ProductID, pi.LocationID });
 
             //modelBuilder.ApplyConfigurationsFromAssembly(typeof(KeplerConfiguration).Assembly);
         }
