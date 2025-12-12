@@ -187,16 +187,12 @@ public class ProductService : IProductService
 
     public async Task<CustomResponse> GetProductsAsync(ProductFilterDto dto, CancellationToken cancellationToken)
     {
+        var config = KeplerPolicyHelper.GetPolicyConfiguration(typeof(Product), "Nav", "Test1");
 
-        //var productSql12 = await _unitOfWork.GetAsQueryable<Product>().Include(x => x.ProductReviews)
-        //    .Where(x => x.ProductID == dto.ProductID).FirstOrDefaultAsync(cancellationToken);
+        var config2 = KeplerPolicyHelper.GetPolicyConfiguration(typeof(Product), "Nav", "Test");
 
+        KeplerPolicyHelper.PrintPolicyConfiguration(typeof(Product), "Nav", "Test");
 
-        //var productSql123 = await _unitOfWork.GetAsQueryable<Product>().Include(x => x.ProductListPriceHistories)
-        //    .Where(x => x.ProductID == dto.ProductID).FirstOrDefaultAsync(cancellationToken);
-
-        //var productSql1233 = await _unitOfWork.GetAsQueryable<Product>().Include(x => x.ProductInventories)
-        //    .Where(x => x.ProductID == dto.ProductID).FirstOrDefaultAsync(cancellationToken);
 
         var productSql1 = await _unitOfWork.GetAsQueryable<Product>()
                .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("Nav", dto, ignoreGlobalExceptions: true, role: "Test1"), out KeplerDebugInfo? de1)
