@@ -10,8 +10,4 @@ namespace KeplerDemo.Application.Contracts;
 public interface IProductService
 {
     Task<CustomResponse> GetProductsAsync(ProductFilterDto dto, CancellationToken cancellationToken);
-
-    Task<CustomResponse> GetProductsBenchmarkV2Async(CancellationToken cancellationToken);
-
-    Task<CustomResponse> GetProductsBenchMarkAsync(CancellationToken cancellationToken);
 }
