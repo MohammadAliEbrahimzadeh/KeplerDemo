@@ -40,8 +40,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 TypeAdapterConfig.GlobalSettings.Scan(typeof(ProductMapper).Assembly);
 
 builder.Services.AddKepler()
-    .AddKeplerPoliciesFromAssembly(typeof(ProductPolicy).Assembly)
-    .ValidateKeplerPolicies();
+    .AddKeplerPoliciesFromAssembly(typeof(ProductPolicy).Assembly);
+    //.ValidateKeplerPolicies();
 
 
 var app = builder.Build();

@@ -1,6 +1,4 @@
-﻿using Kepler.Core.Attributes;
-using System.ComponentModel.DataAnnotations.Schema;
-
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KeplerDemo.Domain.Entities;
 
@@ -9,7 +7,7 @@ public class Product
 {
     public int ProductID { get; set; }
 
-    [KeplerGlobalExclude("test")]
+    //[KeplerGlobalExclude("test")]
     public string? Name { get; set; }
     public string? ProductNumber { get; set; }
     public bool MakeFlag { get; set; }

@@ -28,19 +28,17 @@ public class ProductService : IProductService
 
     public async Task<CustomResponse> GetProductsAsync(ProductFilterDto dto, CancellationToken cancellationToken)
     {
-        var config = KeplerPolicyHelper.GetPolicyConfiguration(typeof(Product), "Nav", "Test1");
+        //var config = KeplerPolicyHelper.GetPolicyConfiguration(typeof(Product), "Nav", "Test1");
 
-        var config2 = KeplerPolicyHelper.GetPolicyConfiguration(typeof(Product), "Nav", "Test");
+        //var config2 = KeplerPolicyHelper.GetPolicyConfiguration(typeof(Product), "Nav", "Test");
 
-        KeplerPolicyHelper.PrintPolicyConfiguration(typeof(Product), "Nav", "Test");
-
+        //KeplerPolicyHelper.PrintPolicyConfiguration(typeof(Product), "Nav", "Test");
 
         var productSql1 = await _unitOfWork.GetAsQueryable<Product>()
-               .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("Nav", dto, ignoreGlobalExceptions: true, role: "Test1"), out KeplerDebugInfo? de1)
+               .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("NavKKKK", dto, ignoreGlobalExceptions: true, role: "Test1"), out KeplerDebugInfo? de1)
                .ApplyKeplerOrdering(KeplerOrderingConfig.CreateWithSql("Nav", "Name", OrderOperationEnum.Descending, "Test1"), out string? sql1)
                .ApplyKeplerPagination()
                .ToListAsync(cancellationToken);
-
 
         var productSql = await _unitOfWork.GetAsQueryable<Product>()
                .ApplyKeplerPolicy(KeplerPolicyConfig.CreateWithFullDebug("Nav", dto, false, "Test"), out KeplerDebugInfo? de)
